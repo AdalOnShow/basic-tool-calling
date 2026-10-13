@@ -40,11 +40,27 @@ async function main() {
     tool_choice: "auto",
   });
 
-  console.log(compliments.choices[0].message);
+  const toolCall = compliments.choices[0].message.tool_calls;
+
+  if (!toolCall || toolCall.length === 0) {
+    console.log("Assistance: " + compliments.choices[0].message.content);
+    return;
+  }
+  for (const call of toolCall) {
+    console.log("Tool Call: " + JSON.stringify(call));
+    const functionName = call.function.name;
+    const functionArgs = call.function.arguments;
+
+    if (functionName === "webSearch") {
+      const searchResult = await webSearch(JSON.parse(functionArgs));
+      console.log("Search Result: " + searchResult);
+    }
+  }
 }
 
 main();
 
 async function webSearch({ query }: { query: string }) {
+  console.log("Searching the web for: " + query);
   return "Iphone 18 was released on September 12, 2026.";
 }
