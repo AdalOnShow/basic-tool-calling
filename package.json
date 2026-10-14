@@ -19,6 +19,7 @@
   "type": "module",
   "dependencies": {
     "@tavily/core": "^0.7.14",
+    "@types/node": "^26.6.5",
     "groq-sdk": "^1.6.0"
   }
 }
