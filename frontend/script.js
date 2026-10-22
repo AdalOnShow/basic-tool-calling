@@ -2,21 +2,54 @@ const form = document.querySelector("#chat-form");
 const prompt = document.querySelector("#prompt");
 const sendButton = document.querySelector("#send-button");
 
+function createLoadingIndicator() {
+  const loader = document.createElement("div");
+  loader.className =
+    "mb-5 mr-auto flex w-fit max-w-[90%] items-center gap-1.5 rounded-2xl bg-[#2c2c2c] px-4 py-3.5 leading-relaxed sm:max-w-[80%]";
+  loader.setAttribute("aria-label", "Assistant is typing");
+  loader.innerHTML = `
+    <span class="typing-dot"></span>
+    <span class="typing-dot"></span>
+    <span class="typing-dot"></span>
+  `;
+  return loader;
+}
+
 async function generate(text) {
+  const chatContainer = document.querySelector("#chat-container");
+
   const msg = document.createElement("div");
   msg.className =
     "mb-5 ml-auto w-fit max-w-[90%] rounded-2xl bg-[#3a3a3a] px-4 py-3 leading-relaxed sm:max-w-[80%]";
   msg.textContent = text;
-  document.querySelector("#chat-container").appendChild(msg);
+  chatContainer.appendChild(msg);
   msg.scrollIntoView({ behavior: "smooth" });
 
-  const assistantMessage = await callServer(text);
-  const assistantMsg = document.createElement("div");
-  assistantMsg.className =
-    "mb-5 mr-auto w-fit max-w-[90%] rounded-2xl bg-[#2c2c2c] px-4 py-3 leading-relaxed sm:max-w-[80%]";
-  assistantMsg.textContent = assistantMessage;
-  document.querySelector("#chat-container").appendChild(assistantMsg);
-  assistantMsg.scrollIntoView({ behavior: "smooth" });
+  const loader = createLoadingIndicator();
+  chatContainer.appendChild(loader);
+  loader.scrollIntoView({ behavior: "smooth" });
+
+  try {
+    const assistantMessage = await callServer(text);
+    loader.remove();
+
+    const assistantMsg = document.createElement("div");
+    assistantMsg.className =
+      "mb-5 mr-auto w-fit max-w-[90%] rounded-2xl bg-[#2c2c2c] px-4 py-3 leading-relaxed sm:max-w-[80%]";
+    assistantMsg.textContent = assistantMessage;
+    chatContainer.appendChild(assistantMsg);
+    assistantMsg.scrollIntoView({ behavior: "smooth" });
+  } catch (error) {
+    loader.remove();
+
+    const errorMsg = document.createElement("div");
+    errorMsg.className =
+      "mb-5 mr-auto w-fit max-w-[90%] rounded-2xl bg-[#3a2424] px-4 py-3 leading-relaxed text-[#f1a9a9] sm:max-w-[80%]";
+    errorMsg.textContent =
+      "Something went wrong. Please make sure the server is running and try again.";
+    chatContainer.appendChild(errorMsg);
+    errorMsg.scrollIntoView({ behavior: "smooth" });
+  }
 }
 
 async function callServer(text) {
