@@ -2,13 +2,37 @@ const form = document.querySelector("#chat-form");
 const prompt = document.querySelector("#prompt");
 const sendButton = document.querySelector("#send-button");
 
-function generate(text) {
+async function generate(text) {
   const msg = document.createElement("div");
   msg.className =
     "mb-5 ml-auto w-fit max-w-[90%] rounded-2xl bg-[#3a3a3a] px-4 py-3 leading-relaxed sm:max-w-[80%]";
   msg.textContent = text;
   document.querySelector("#chat-container").appendChild(msg);
   msg.scrollIntoView({ behavior: "smooth" });
+
+  const assistantMessage = await callServer(text);
+  const assistantMsg = document.createElement("div");
+  assistantMsg.className =
+    "mb-5 mr-auto w-fit max-w-[90%] rounded-2xl bg-[#2c2c2c] px-4 py-3 leading-relaxed sm:max-w-[80%]";
+  assistantMsg.textContent = assistantMessage;
+  document.querySelector("#chat-container").appendChild(assistantMsg);
+  assistantMsg.scrollIntoView({ behavior: "smooth" });
+}
+
+async function callServer(text) {
+  const response = await fetch("http://localhost:3000/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ message: text }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const result = await response.json();
+  return result.message;
 }
 
 function resizePrompt() {
@@ -38,7 +62,7 @@ prompt.addEventListener("keydown", (event) => {
   }
 });
 
-form.addEventListener("submit", (event) => {
+form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const text = prompt.value.trim();
   if (!text) return;
@@ -46,5 +70,5 @@ form.addEventListener("submit", (event) => {
   prompt.value = "";
   resizePrompt();
   updateSendButton();
-  generate(text);
+  await generate(text);
 });
