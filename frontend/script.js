@@ -2,6 +2,8 @@ const form = document.querySelector("#chat-form");
 const prompt = document.querySelector("#prompt");
 const sendButton = document.querySelector("#send-button");
 
+const threadId = crypto.randomUUID();
+
 function createLoadingIndicator() {
   const loader = document.createElement("div");
   loader.className =
@@ -58,7 +60,7 @@ async function callServer(text) {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ message: text }),
+    body: JSON.stringify({ message: text, threadId }),
   });
 
   if (!response.ok) {

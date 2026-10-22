@@ -1,12 +1,14 @@
-import readline from "node:readline/promises";
 import { tavily } from "@tavily/core";
 import Groq from "groq-sdk";
+import NodeCache from "node-cache";
 
 const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const tavilyClient = tavily({ apiKey: process.env.TAVILY_API_KEY });
 
-export async function generate(userMessage) {
-  const messages = [
+const cache = new NodeCache({ stdTTL: 60 * 60 * 24 }); // Cache for 24 hours
+
+export async function generate(userMessage, threadId) {
+  const baseMessages = [
     {
       role: "system",
       content: `You are a helpful assistant that provides compliments. Answer users question with most simple and direct answers possible. And do not use any formatting only answer with plain text. If you don't know the answer, you can use the webSearch tool to find the answer.
@@ -16,7 +18,10 @@ export async function generate(userMessage) {
     },
   ];
 
+  const messages = cache.get(threadId) ?? [...baseMessages];
+
   messages.push({ role: "user", content: userMessage });
+
   while (true) {
     const compliments = await client.chat.completions.create({
       model: "qwen/qwen3.8-27b",
@@ -51,6 +56,7 @@ export async function generate(userMessage) {
 
     if (!toolCall || toolCall.length === 0) {
       const assistantMessage = compliments.choices[0].message.content;
+      cache.set(threadId, messages);
       return assistantMessage;
     }
 

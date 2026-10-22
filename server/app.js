@@ -14,7 +14,17 @@ app.use(express.json());
 
 app.post("/chat", async (req, res) => {
   const userMessage = req.body.message;
-  const response = await generate(userMessage);
+  const { threadId } = req.body;
+  
+  if (!userMessage) {
+    return res.status(400).json({ error: "Message is required" });
+  }
+
+  if (!threadId) {
+    return res.status(400).json({ error: "Thread ID is required" });
+  }
+
+  const response = await generate(userMessage, threadId);
   res.json({ message: response });
 });
 
